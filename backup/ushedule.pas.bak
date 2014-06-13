@@ -1,0 +1,364 @@
+unit ushedule;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Grids,
+  StdCtrls, DbCtrls, ExtCtrls, references, MetaData, sqldb, db, types, UQuery, ufilters, math;
+
+type
+
+  { TFieldData }
+
+  TFieldData = class(TObject)
+    Name, Value : string;
+    constructor Create(AName: string);
+  end;
+
+    { TRecordData }
+
+  TRecordData = class(TObject)
+    Fields: array of TFieldData;
+    constructor Create;
+  end;
+
+  { TRecordCell }
+
+  TRecordCell = class(TObject)
+    Records: array of TRecordData;
+    Height: integer;
+    Opened: boolean;
+    function AddRecord: integer;
+  end;
+
+  { TScheduleForm }
+  TScheduleForm = class(TForm)
+    ScheduleGrid: TDrawGrid;
+    ScheduleDatasource: TDatasource;
+    ScheduleQuery: TSQLQuery;
+    CheckGroup: TCheckGroup;
+    Timer1: TTimer;
+    XFieldLbl: TLabel;
+    YFieldLbl: TLabel;
+    YFieldBox: TComboBox;
+    XFieldBox: TComboBox;
+    procedure ApplyBtnClick(Sender: TObject);
+    procedure DrawGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure FormCreate(Sender: TObject);
+    function GetTitles(ATable: TTableInfo; AField: TFieldInfo): TStringList;
+    procedure ScheduleGridClick(Sender: TObject);
+    procedure ScheduleGridDrawCell(Sender: TObject; aCol, aRow: Integer;
+      aRect: TRect; aState: TGridDrawState);
+    procedure ScheduleGridSelectCell(Sender: TObject; aCol, aRow: Integer;
+      var CanSelect: Boolean);
+    procedure SetData;
+    function MaxWidth(AStringList: TStringList): integer;
+    procedure FixHeights(Row: integer);
+    procedure InitHeights;
+  private
+    CheckedCount: integer;
+    Initialized: Boolean;
+    XFields, YFields: TStringList;
+    XField, YField: TFieldInfo;
+    Data : array of array of TRecordCell;
+    MaxHeights: array of integer;
+    SFilters: TFilterPack;
+  end;
+  var
+    ScheduleForm: TScheduleForm;
+  const
+    theight = 20;
+
+implementation
+
+{$R *.lfm}
+
+{ TRecordCell }
+
+function TRecordCell.AddRecord: integer;
+begin
+  SetLength(Records ,Length(Records) + 1);
+  Records[High(Records)] := TRecordData.Create;
+  Result := High(Records);
+end;
+
+{ TRecordData }
+
+constructor TRecordData.Create;
+var
+  i : integer;
+begin
+  inherited Create;
+  SetLength(Fields, length(Tables[high(Tables)].Fields) - 1);
+  for i := 0 to High(Fields) do
+    Fields[i] := TFieldData.Create(Tables[high(Tables)].Fields[i + 1].Translation);
+end;
+
+{ TFieldData }
+
+constructor TFieldData.Create(AName: string);
+begin
+  inherited create;
+  Name := AName;
+end;
+
+{ TScheduleForm }
+
+procedure TScheduleForm.FormCreate(Sender: TObject);
+var
+  i: Integer;
+begin
+  for i := 1 to high(Tables[high(Tables)].Fields) do
+    with Tables[high(Tables)].Fields[i] do begin
+        CheckGroup.Items.Add(Translation);
+        XFieldBox.Items.Add(Translation);
+        YFieldBox.Items.Add(Translation);
+    end;
+  XFieldBox.ItemIndex := 0;
+  YFieldBox.ItemIndex := 0;
+  XFields := TStringList.Create;
+  YFields := TStringList.Create;
+  SFilters := TFilterPack.Create(10, 315, Self, @Self.ApplyBtnClick);
+  SFilters.ActiveTable := @Tables[High(Tables)];
+  Show;
+end;
+
+function TScheduleForm.GetTitles(ATable: TTableInfo; AField: TFieldInfo): TStringList;
+var
+  i: Integer;
+  temp: string;
+  TableName, FieldName: string;
+  where: boolean;
+  j: Integer;
+begin
+  result := TStringList.Create;
+  FieldName := AField.RefField;
+  TableName := AField.RefTable;
+
+  ScheduleQuery.Close;
+  ScheduleQuery.SQL.Text := format('select %s from %s',[
+    FieldName,
+    TableName]);
+  j := 0;
+  for i := 0 to high(SFilters.FilterList) do
+    if SFilters.FilterList[i].FieldNameBox.Caption = AField.Translation then begin
+      if not where then begin
+        ScheduleQuery.SQL.Add(' where ');
+        where := true;
+      end;
+      ScheduleQuery.SQL.Add(
+        SFilters.FilterList[i].Condition(
+          SFilters.FilterList[i].TypeBox.Text,
+          Format('%s.%s', [tablename, fieldname]),
+          'value' + IntToStr(j)
+        ));
+
+      case ATable.Fields[SFilters.FilterList[i].FieldNameBox.ItemIndex].ValueType of
+        'string' :
+          ScheduleQuery.ParamByName('value' + IntToStr(j)).AsString :=
+            SFilters.FilterList[i].ValueEdit.Caption;
+        'int' :
+          if SFilters.FilterList[i].ValueEdit.Caption <> '' then
+            ScheduleQuery.ParamByName('value' + IntToStr(j)).AsInteger :=
+              strtoint(SFilters.FilterList[i].ValueEdit.Caption);
+      end;
+      j += 1;
+    end;
+  ScheduleQuery.SQL.Add(format(' group by %s order by %s asc',[FieldName,FieldName]));
+  temp := ScheduleQuery.SQL.Text;
+  ScheduleQuery.Open;
+  for i := 1 to ScheduleQuery.RowsAffected do begin
+     Result.Add(ScheduleQuery.FieldByName(FieldName).AsString);
+     ScheduleQuery.Next;
+  end;
+end;
+
+procedure TScheduleForm.ScheduleGridClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  with ScheduleGrid do begin
+    if (not Initialized) or (Data[Col - 1][Row - 1] = Nil) then Exit;
+    if (length(Data[Col - 1][Row - 1].Records) > 1) and (not Data[Col - 1][Row - 1].Opened) then begin
+      Data[Col - 1][Row - 1].Height := theight * CheckedCount * length(Data[Col - 1][Row - 1].Records);
+      ScheduleGrid.RowHeights[Row] :=  Data[Col - 1][Row - 1].Height;
+      MaxHeights[Row - 1] := Data[Col - 1][Row - 1].Height;
+      for i := 0 to high(Data) do
+        if Data[i][Row - 1] <> Nil then  Data[i][Row - 1].Opened := false;
+      Data[Col - 1][Row - 1].Opened := true;
+    end
+    else begin
+      ScheduleGrid.RowHeights[Row] :=  theight * CheckedCount;
+      MaxHeights[Row - 1] := theight * CheckedCount;
+      Data[Col - 1][Row - 1].Opened := false;
+    end;
+    ScheduleGrid.Invalidate;
+  end;
+end;
+
+procedure TScheduleForm.ScheduleGridDrawCell(Sender: TObject; aCol,
+  aRow: Integer; aRect: TRect; aState: TGridDrawState);
+var
+  size: integer;
+  i, j: Integer;
+  k: Integer;
+begin
+  if (XFields.Count = 0) or (YFields.Count = 0) then exit;
+  if (aCol = 0) and (aRow = 0) then begin
+    if CheckedCount > 1 then begin
+      ScheduleGrid.Canvas.TextOut(aRect.Left + 5, aRect.bottom - 20, YFieldBox.Caption);
+      ScheduleGrid.Canvas.TextOut(aRect.Right - ScheduleGrid.Canvas.TextWidth(XFieldBox.Caption) - 5,
+        aRect.Top, XFieldBox.Caption);
+      ScheduleGrid.Canvas.Line(aRect.TopLeft,aRect.BottomRight);
+    end;
+  end
+  else if (aCol = 0) and (aRow <> 0)  then begin
+    ScheduleGrid.Canvas.TextOut(aRect.Left + 5, aRect.Top, YFields[aRow - 1])
+  end
+  else if (aRow = 0) and (aCol <> 0) then begin
+    ScheduleGrid.Canvas.TextOut(aRect.Left + 5, aRect.Top, XFields[aCol - 1])
+  end
+  else if (aRow + aCol <> 0) then
+    if (Data[aCol - 1][aRow - 1] <> Nil) and (length(Data[aCol - 1][aRow - 1].Records) <> 0) then begin
+      j := 0;
+      for k := 0 to high(Data[aCol - 1][aRow - 1].Records) do begin
+        for i := 0 to High(Data[aCol - 1][ARow - 1].Records[k].Fields) do
+          if CheckGroup.Checked[i] then begin
+            ScheduleGrid.Canvas.Brush.Style := bsClear;
+            ScheduleGrid.Canvas.TextOut(aRect.Left + 5, aRect.Top + j*theight,
+              Format('%s : %s', [
+                Data[aCol - 1][aRow - 1].Records[k].Fields[i].Name,
+                Data[aCol - 1][aRow - 1].Records[k].Fields[i].Value]));
+            j += 1;
+          end;
+        ScheduleGrid.Canvas.Pen.Style := psDot;
+        ScheduleGrid.Canvas.Pen.Color := clGray;
+        ScheduleGrid.Canvas.Line(aRect.Left, aRect.Top + j*theight, aRect.Right, aRect.Top + j*theight);
+      end;
+      if length(Data[aCol - 1][aRow - 1].Records) > 1 then
+        if (CheckedCount > 1) and (Data[aCol - 1][aRow - 1].Height > MaxHeights[aRow - 1]) then begin
+          ScheduleGrid.Canvas.Brush.Style := bsSolid;
+          ScheduleGrid.Canvas.Brush.Color := clPurple;
+          ScheduleGrid.Canvas.Pen.Color:= clPurple;
+          ScheduleGrid.Canvas.Polygon([
+            Point(aRect.Right, aRect.Bottom - 10),
+            aRect.BottomRight,
+            Point(aRect.Right - 10, aRect.Bottom)]);
+        end;
+    end;
+  ScheduleGrid.Canvas.Brush.Style := bsClear;
+  ScheduleGrid.Canvas.Pen.Color := clBlack;
+  ScheduleGrid.Canvas.Pen.Style := psSolid;
+  ScheduleGrid.Canvas.Rectangle(aRect.Left, aRect.Top, aRect.Right - 1, aRect.Bottom - 1);
+end;
+
+
+procedure TScheduleForm.ScheduleGridSelectCell(Sender: TObject; aCol,
+  aRow: Integer; var CanSelect: Boolean);
+var
+  i: Integer;
+begin
+ // if (not Initialized) or (Data[aCol - 1][aRow - 1] = Nil) then Exit;
+ //for i := 0 to High(Data[0]) do
+ //     ScheduleGrid.RowHeights[i] := theight * CheckedCount;
+ // if length(Data[aCol - 1][aRow - 1]) > 1 then
+ //   ScheduleGrid.RowHeights[aRow] := theight * CheckedCount * length(Data[aCol - 1][aRow - 1]);
+end;
+
+
+procedure TScheduleForm.SetData;
+var
+  i, j, k, l: Integer;
+begin
+  SetLength(Data, XFields.Count);
+  SetLength(MaxHeights, XFields.Count);
+  for i := 0 to High(Data) do
+    SetLength(Data[i], YFields.Count);
+  i := 0; j := 0;
+  while not ScheduleQuery.EOF do begin
+
+    while (ScheduleQuery.Fields[XFieldBox.ItemIndex + 1].AsString <> XFields[i]) do begin
+       i += 1;
+       j := 0;
+    end;
+
+    while (ScheduleQuery.Fields[YFieldBox.ItemIndex + 1].AsString <> YFields[j]) do
+       j += 1;
+    if Data[i,j] = Nil then Data[i,j] := TRecordCell.Create;
+    k := Data[i][j].AddRecord;
+    Data[i][j].Height += CheckedCount * theight;
+    for l := 0 to ScheduleQuery.FieldCount - 2 do
+      Data[i][j].Records[k].Fields[l].Value := ScheduleQuery.Fields[l + 1].AsString;
+    ScheduleQuery.Next;
+  end;
+end;
+
+function TScheduleForm.MaxWidth(AStringList: TStringList): integer;
+var
+  i, max: integer;
+begin
+  max := 0;
+  for i := 0 to AStringList.Count - 1 do
+    if ScheduleGrid.Canvas.TextWidth(AStringList[i]) > max then
+      max := ScheduleGrid.Canvas.TextWidth(AStringList[i]);
+  if max > 250 then result := 250 else result := max + 5;
+end;
+
+procedure TScheduleForm.FixHeights(Row: integer);
+var
+  max, i: Integer;
+begin
+  max := 0;
+  for i := 0 to High(Data) do
+    if Data[i][Row - 1].Height > max then max := Data[i][Row - 1].Height;
+  MaxHeights[Row - 1] := max;
+end;
+
+procedure TScheduleForm.InitHeights;
+begin
+  //for i := 0 to high(Data) do
+  //  for j :=
+end;
+
+procedure TScheduleForm.ApplyBtnClick(Sender: TObject);
+var
+  i, j, k: integer;
+  temp: string;
+begin
+  for i := 0 to high(Data) do
+    for j := 0 to high(Data[i]) do
+        FreeAndNil(Data[i][j]);
+  XField := Tables[high(Tables)].Fields[XFieldBox.ItemIndex + 1];
+  YField := Tables[high(Tables)].Fields[YFieldBox.ItemIndex + 1];
+  XFields := GetTitles(Tables[high(Tables)], Tables[high(Tables)].Fields[XFieldBox.ItemIndex + 1]);
+  ScheduleGrid.ColCount := XFields.Count + 1;
+  YFields := GetTitles(Tables[high(Tables)], Tables[high(Tables)].Fields[YFieldBox.ItemIndex + 1]);
+  ScheduleGrid.RowCount := YFields.Count + 1;
+  ScheduleQuery.Close;
+  SelectQ(ScheduleQuery, SFilters.FilterList, Tables[High(Tables)],[XField, YField]);
+  temp := ScheduleQuery.SQL.Text;
+  ScheduleQuery.Open;
+  CheckedCount := 0;
+  for i := 0 to CheckGroup.Items.Count - 1 do
+    if CheckGroup.Checked[i] then CheckedCount += 1;
+  SetData;
+  if CheckedCount = 0 then j := theight else j := CheckedCount * theight;
+  ScheduleGrid.DefaultRowHeight := j;
+  if not Initialized then Initialized := True;
+  ScheduleGrid.ColWidths[0] := max(MaxWidth(YFields),
+    max(ScheduleGrid.Canvas.TextWidth(YFieldBox.Caption),
+    ScheduleGrid.Canvas.TextWidth(XFieldBox.Caption))) + 30;
+  ScheduleGrid.Invalidate;
+end;
+
+procedure TScheduleForm.DrawGrid1MouseWheelDown(Sender: TObject;
+  Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
+begin
+
+end;
+
+end.
+

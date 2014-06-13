@@ -1,0 +1,151 @@
+object ScheduleForm: TScheduleForm
+  Left = 543
+  Height = 646
+  Top = 40
+  Width = 1043
+  Caption = 'ScheduleForm'
+  ClientHeight = 626
+  ClientWidth = 1043
+  Menu = ScheduleMenu
+  OnCreate = FormCreate
+  OnDragOver = FormDragOver
+  LCLVersion = '1.2.2.0'
+  object YFieldBox: TComboBox
+    Left = 17
+    Height = 23
+    Top = 91
+    Width = 184
+    Anchors = [akTop]
+    ItemHeight = 15
+    OnChange = YFieldBoxChange
+    Style = csDropDownList
+    TabOrder = 0
+  end
+  object XFieldBox: TComboBox
+    Left = 17
+    Height = 23
+    Top = 35
+    Width = 185
+    Anchors = [akTop]
+    ItemHeight = 15
+    OnChange = XFieldBoxChange
+    Style = csDropDownList
+    TabOrder = 1
+  end
+  object XFieldLbl: TLabel
+    Left = 6
+    Height = 15
+    Top = 12
+    Width = 79
+    Anchors = [akTop]
+    Caption = 'Поле по оси X'
+    ParentColor = False
+  end
+  object YFieldLbl: TLabel
+    Left = 6
+    Height = 15
+    Top = 67
+    Width = 79
+    Anchors = [akTop]
+    Caption = 'Поле по оси Y'
+    ParentColor = False
+  end
+  object CheckGroup: TCheckGroup
+    Left = 17
+    Height = 176
+    Top = 132
+    Width = 184
+    Anchors = [akTop]
+    AutoFill = True
+    Caption = 'Отображаемые поля'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.TopBottomSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 2
+    OnItemClick = CheckGroupItemClick
+    TabOrder = 2
+  end
+  object ScheduleGrid: TDrawGrid
+    AnchorSideLeft.Control = YFieldBox
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 311
+    Height = 626
+    Top = 0
+    Width = 732
+    AlternateColor = clActiveBorder
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Left = 110
+    DefaultColWidth = 250
+    DefaultRowHeight = 25
+    DragMode = dmAutomatic
+    ExtendedSelect = False
+    FixedColor = 16751052
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goThumbTracking, goSmoothScroll, goDontScrollPartCell]
+    TabOrder = 3
+    OnDblClick = ScheduleGridDblClick
+    OnDragDrop = ScheduleGridDragDrop
+    OnDragOver = ScheduleGridDragOver
+    OnDrawCell = ScheduleGridDrawCell
+    OnEndDrag = ScheduleGridEndDrag
+    OnMouseMove = ScheduleGridMouseMove
+    OnStartDrag = ScheduleGridStartDrag
+  end
+  object ScheduleQuery: TSQLQuery
+    FieldDefs = <>
+    Database = DBConnector.IBConnection1
+    Transaction = DBConnector.SQLTransaction1
+    Params = <>
+    left = 608
+    top = 440
+  end
+  object ScheduleDatasource: TDataSource
+    DataSet = ScheduleQuery
+    left = 664
+    top = 440
+  end
+  object Timer1: TTimer
+    left = 252
+    top = 29
+  end
+  object ScheduleMenu: TMainMenu
+    left = 359
+    top = 5
+    object ExportItem: TMenuItem
+      Caption = 'Экспорт'
+      object HTMLItem: TMenuItem
+        Caption = 'HTML'
+        OnClick = HTMLItemClick
+      end
+    end
+    object PreferencesItem: TMenuItem
+      Caption = 'Настройки'
+      OnClick = PreferencesItemClick
+      object FieldNamesItem: TMenuItem
+        AutoCheck = True
+        Caption = 'Отображать названия полей'
+        Checked = True
+        OnClick = FieldNamesItemClick
+      end
+      object SortedOutItem: TMenuItem
+        AutoCheck = True
+        Caption = 'Отображать непрошедшие сортировку столбцы/стоки'
+        Checked = True
+        OnClick = SortedOutItemClick
+      end
+    end
+  end
+  object ExportDlg: TSaveDialog
+    Filter = 'HTML|.html'
+    left = 256
+    top = 108
+  end
+end

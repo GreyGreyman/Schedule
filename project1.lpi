@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <SessionStorage Value="InProjectDir"/>
+      <MainUnit Value="0"/>
+      <Title Value="project1"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="0"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="4">
+      <Item1>
+        <PackageName Value="SynEdit"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="SQLDBLaz"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="LCL"/>
+      </Item4>
+    </RequiredPackages>
+    <Units Count="9">
+      <Unit0>
+        <Filename Value="project1.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="project1"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="main"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="references.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="ReferenceForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="references"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="dbdata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="DBConnector"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="DBData"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="metadata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="MetaData"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="ueditcard.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="CardForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ueditcard"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="uschedule.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="ScheduleForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uschedule"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="uquery.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UQuery"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="ufilters.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ufilters"/>
+      </Unit8>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="project1"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerMessages>
+        <MsgFileName Value=""/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

@@ -1,0 +1,73 @@
+object CardForm: TCardForm
+  Left = 737
+  Height = 333
+  Top = 170
+  Width = 291
+  Caption = 'CardForm'
+  ClientHeight = 333
+  ClientWidth = 291
+  Position = poDesktopCenter
+  LCLVersion = '1.2.2.0'
+  object FieldBox: TScrollBox
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = BtnPanel
+    Left = 0
+    Height = 252
+    Top = 0
+    Width = 291
+    HorzScrollBar.Page = 287
+    VertScrollBar.Page = 248
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    TabOrder = 0
+  end
+  object BtnPanel: TPanel
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 81
+    Top = 252
+    Width = 291
+    Anchors = [akLeft, akRight, akBottom]
+    ClientHeight = 81
+    ClientWidth = 291
+    TabOrder = 1
+    object AcceptBtn: TButton
+      Left = 1
+      Height = 40
+      Top = 1
+      Width = 289
+      Align = alTop
+      Caption = 'Применить'
+      OnClick = AcceptBtnClick
+      TabOrder = 0
+    end
+    object CancelBtn: TButton
+      Left = 1
+      Height = 40
+      Top = 40
+      Width = 289
+      Align = alBottom
+      Caption = 'Отмена'
+      OnClick = CancelBtnClick
+      TabOrder = 1
+    end
+  end
+  object FormQuery: TSQLQuery
+    FieldDefs = <>
+    Database = DBConnector.IBConnection1
+    Transaction = DBConnector.SQLTransaction1
+    Params = <>
+    left = 96
+    top = 112
+  end
+  object FormDatasource: TDataSource
+    DataSet = FormQuery
+    left = 96
+    top = 168
+  end
+end

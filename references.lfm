@@ -1,0 +1,96 @@
+object ReferenceForm: TReferenceForm
+  Left = 350
+  Height = 565
+  Top = 154
+  Width = 918
+  Caption = 'Справочник'
+  ClientHeight = 565
+  ClientWidth = 918
+  KeyPreview = True
+  OnClose = FormClose
+  OnCreate = FormCreate
+  LCLVersion = '1.2.2.0'
+  object Grid1: TDBGrid
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = AddRecordBtn
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 500
+    Top = 65
+    Width = 544
+    Anchors = [akTop, akLeft, akBottom]
+    AutoEdit = False
+    BorderSpacing.Top = 10
+    Color = clWindow
+    Columns = <>
+    DataSource = Datasource1
+    Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgThumbTracking]
+    TabOrder = 0
+    OnDblClick = AlterRecordBtnClick
+    OnTitleClick = Grid1TitleClick
+  end
+  object CheckBox1: TCheckBox
+    Left = 336
+    Height = 19
+    Top = 24
+    Width = 99
+    Caption = 'Показывать ID'
+    Checked = True
+    OnChange = CheckBox1Change
+    State = cbChecked
+    TabOrder = 1
+  end
+  object AddRecordBtn: TButton
+    Left = 10
+    Height = 45
+    Hint = 'Добавить запись'
+    Top = 10
+    Width = 90
+    Caption = 'Добавить'
+    OnClick = AddRecordBtnClick
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 2
+  end
+  object AlterRecordBtn: TButton
+    Left = 105
+    Height = 45
+    Hint = 'Изменить запись'
+    Top = 10
+    Width = 90
+    Caption = 'Изменить'
+    OnClick = AlterRecordBtnClick
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 3
+  end
+  object DeleteRecordBtn: TButton
+    Left = 200
+    Height = 45
+    Hint = 'Удалить запись'
+    Top = 10
+    Width = 90
+    Caption = 'Удалить'
+    OnClick = DeleteRecordBtnClick
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 4
+  end
+  object Datasource1: TDataSource
+    DataSet = SQLQuery1
+    left = 808
+    top = 8
+  end
+  object SQLQuery1: TSQLQuery
+    FieldDefs = <>
+    Database = DBConnector.IBConnection1
+    Transaction = DBConnector.SQLTransaction1
+    Params = <>
+    left = 768
+    top = 8
+  end
+end
